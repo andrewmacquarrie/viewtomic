@@ -2,3 +2,4 @@
 /datomic-free-0.8.3538
 *.jar
 .DS_Store
+/classes
