@@ -9,14 +9,17 @@
 (defn dbconn [] (db (conn)))
 (defn- entities
   [query-function]
-  (let [db (db (conn))]
-    (map #(d/entity db (first %)) query-function)))
+  (map #(d/entity (dbconn) (first %)) query-function))
 (defn get-entities
   ([field]
   (entities (q '[:find ?n :in $ ?f :where [?n ?f]] (dbconn) field))))
 (defn find-with
   [field]
   (get-entities field))
+
+(defn get-entity
+  [id]
+  (d/entity (dbconn) id))
 
 (native!)
 
@@ -31,17 +34,27 @@
   (config! f :content content)
   content)
 
-(def field (display (text "Enter field to search for...")))
-
+; search by attribute name
+(def field (display (text "Enter attribute name to search for...")))
 (def b (button 
-  :text "Search"))
-
+  :text "Search for field"))
 (listen b :action (fn [e] 
   (config! itemlist :model (find-with (text field)))))
 
+; search by ID
+(def id-input (display (text "Enter entity id to retrieve...")))
+(def b2 (button 
+  :text "Search for entity"))
+(listen b2 :action (fn [e] 
+  (config! itemlist :model (get-entity (read-string (text id-input))))))
+
 (defn -main [& args]
   (display (vertical-panel :items [
-    b
-    field
+    (horizontal-panel :items [
+      field
+      b])
+    (horizontal-panel :items [
+      id-input
+      b2])
     (scrollable itemlist)]))
   (-> f pack! show!))
