@@ -11,7 +11,7 @@ Usage
 ========
 Uses Leiningen https://github.com/technomancy/leiningen
 
-You'll need to change the connection URL in the db.clj file to point to your datomic database. Then at the command line:
+You can change the default connection URL in the db.clj file to point to your datomic database so you don't need to enter it every time the app starts. Then at the command line:
 
 > lein deps
 
