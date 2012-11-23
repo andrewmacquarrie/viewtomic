@@ -2,9 +2,9 @@
   (:use [datomic.api :only [q db] :as d])
   (:gen-class))
 
-(def uri "datomic:free://localhost:4334//media-plans")
+(def url (atom "datomic:free://localhost:4334//media-plans"))
 
-(defn conn [] (d/connect uri))
+(defn conn [] (d/connect @url))
 (defn dbconn [] (db (conn)))
 (defn- entities
   [query-function]
@@ -19,3 +19,7 @@
 (defn get-entity
   [id]
   (d/entity (dbconn) id))
+
+(defn set-db-url
+	[url-string]
+	(swap! url (fn [current] url-string)))

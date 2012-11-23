@@ -29,10 +29,16 @@
         (text! field field-text))))
     field))
 
+; Set the DB URL
+(def db-url-field (volatile-field "Enter DB URL..."))
+(text! db-url-field @db/url)
+(def set-db-url-button (button :text "Set DB URL"))
+(listen set-db-url-button :action (fn [e]
+  (db/set-db-url (text db-url-field))))
+
 ; search by attribute name
 (def attribute-seach-field (volatile-field "Enter attribute name to search for..."))
-(def attribute-search-button (button 
-  :text "Search for field"))
+(def attribute-search-button (button :text "Search for field"))
 (listen attribute-search-button :action (fn [e]
   (let [data (db/find-with (text attribute-seach-field))]
     (config! data-grid 
@@ -53,6 +59,9 @@
 
 (defn -main [& args]
   (display (vertical-panel :items [
+    (horizontal-panel :items [
+      db-url-field
+      set-db-url-button])
     (horizontal-panel :items [
       attribute-seach-field
       attribute-search-button])
