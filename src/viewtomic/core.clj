@@ -1,60 +1,63 @@
 (ns viewtomic.core
-  (:use [seesaw.core]
-        [datomic.api :only [q db] :as d])
+  (:use [seesaw.core])
+  (:require [viewtomic.db :as db])
   (:import org.pushingpixels.substance.api.SubstanceLookAndFeel)
   (:gen-class))
-
-(def uri "datomic:free://localhost:4334//media-plans")
-(defn conn [] (d/connect uri))
-(defn dbconn [] (db (conn)))
-(defn- entities
-  [query-function]
-  (map #(d/entity (dbconn) (first %)) query-function))
-(defn get-entities
-  ([field]
-  (entities (q '[:find ?n :in $ ?f :where [?n ?f]] (dbconn) field))))
-(defn find-with
-  [field]
-  (get-entities field))
-
-(defn get-entity
-  [id]
-  (d/entity (dbconn) id))
 
 (native!)
 
 (def f (frame 
-  :title "Get to know Seesaw"
+  :title "Viewtomic"
   :on-close :exit))
 
-(def itemlist (listbox
-  :model (find-with :creative-size/dimensions)))
+(def data-grid
+  (table
+    :model [:columns [] :rows []]))
 
 (defn display [content]
   (config! f :content content)
   content)
 
+(defn volatile-field
+  [field-text]
+  (let [field (display (text field-text))]
+    (listen field :focus-gained (fn [e]
+      (if (= (text field) field-text)
+        (text! field ""))))
+    (listen field :focus-lost (fn [e]
+      (if (= (text field) "")
+        (text! field field-text))))
+    field))
+
 ; search by attribute name
-(def field (display (text "Enter attribute name to search for...")))
-(def b (button 
+(def attribute-seach-field (volatile-field "Enter attribute name to search for..."))
+(def attribute-search-button (button 
   :text "Search for field"))
-(listen b :action (fn [e] 
-  (config! itemlist :model (find-with (text field)))))
+(listen attribute-search-button :action (fn [e]
+  (let [data (db/find-with (text attribute-seach-field))]
+    (config! data-grid 
+      :model [:columns (vec (keys (first data))) 
+      :rows (map #(into {} %) data)] ))
+    (-> f pack!)))
 
 ; search by ID
-(def id-input (display (text "Enter entity id to retrieve...")))
-(def b2 (button 
+(def id-seach-field (volatile-field "Enter entity id to retrieve..."))
+(def id-search-button (button 
   :text "Search for entity"))
-(listen b2 :action (fn [e] 
-  (config! itemlist :model (get-entity (read-string (text id-input))))))
+(listen id-search-button :action (fn [e] 
+  (let [data [(db/get-entity (read-string (text id-seach-field)))]]
+    (config! data-grid 
+      :model [:columns (vec (keys (first data))) 
+      :rows (map #(into {} %) data)] ))
+    (-> f pack!)))
 
 (defn -main [& args]
   (display (vertical-panel :items [
     (horizontal-panel :items [
-      field
-      b])
+      attribute-seach-field
+      attribute-search-button])
     (horizontal-panel :items [
-      id-input
-      b2])
-    (scrollable itemlist)]))
+      id-seach-field
+      id-search-button])
+    (scrollable data-grid)]))
   (-> f pack! show!))
