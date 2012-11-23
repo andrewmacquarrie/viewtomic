@@ -36,26 +36,25 @@
 (listen set-db-url-button :action (fn [e]
   (db/set-db-url (text db-url-field))))
 
+(defn display-data
+  [data]
+  (config! data-grid 
+      :model [:columns (vec (keys (first data))) 
+      :rows (map #(into {} %) data)] )
+  (-> f pack!))
+
 ; search by attribute name
 (def attribute-seach-field (volatile-field "Enter attribute name to search for..."))
 (def attribute-search-button (button :text "Search for field"))
-(listen attribute-search-button :action (fn [e]
-  (let [data (db/find-with (text attribute-seach-field))]
-    (config! data-grid 
-      :model [:columns (vec (keys (first data))) 
-      :rows (map #(into {} %) data)] ))
-    (-> f pack!)))
+(listen attribute-search-button :action 
+  (fn [e] (display-data (db/find-with (text attribute-seach-field)))))
 
 ; search by ID
 (def id-seach-field (volatile-field "Enter entity id to retrieve..."))
 (def id-search-button (button 
   :text "Search for entity"))
-(listen id-search-button :action (fn [e] 
-  (let [data [(db/get-entity (read-string (text id-seach-field)))]]
-    (config! data-grid 
-      :model [:columns (vec (keys (first data))) 
-      :rows (map #(into {} %) data)] ))
-    (-> f pack!)))
+(listen id-search-button :action 
+  (fn [e] (display-data [(db/get-entity (read-string (text id-seach-field)))])))
 
 (defn -main [& args]
   (display (vertical-panel :items [
