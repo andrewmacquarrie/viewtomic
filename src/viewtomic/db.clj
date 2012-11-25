@@ -20,6 +20,10 @@
   [id]
   (d/entity (dbconn) id))
 
+(defn run-query
+  [query params]
+  (entities (q (read-string query) (dbconn) params)))
+
 (defn set-db-url
 	[url-string]
 	(swap! url (fn [current] url-string)))

@@ -51,21 +51,37 @@
 
 ; search by ID
 (def id-seach-field (volatile-field "Enter entity id to retrieve..."))
-(def id-search-button (button 
-  :text "Search for entity"))
+(def id-search-button (button :text "Search for entity"))
 (listen id-search-button :action 
   (fn [e] (display-data [(db/get-entity (read-string (text id-seach-field)))])))
 
+; Query
+(def query-field (volatile-field "Enter datalog query..."))
+(def query-params-field (volatile-field "Enter query params (optional)"))
+(def query-button (button :text "Run query"))
+(listen query-button :action 
+  (fn [e] (display-data (db/run-query (text query-field) (text query-params-field)))))
+
 (defn -main [& args]
   (display (vertical-panel :items [
-    (horizontal-panel :items [
-      db-url-field
-      set-db-url-button])
-    (horizontal-panel :items [
-      attribute-seach-field
-      attribute-search-button])
-    (horizontal-panel :items [
-      id-seach-field
-      id-search-button])
+    (tabbed-panel
+      :placement :top
+      :tabs [
+        {:title "Set database URL"
+        :content (horizontal-panel :items [
+          db-url-field
+          set-db-url-button])}
+        {:title "Perform search"
+        :content (vertical-panel :items [
+          (horizontal-panel :items [
+            attribute-seach-field
+            attribute-search-button])
+          (horizontal-panel :items [
+            id-seach-field
+            id-search-button])])}
+        {:title "Perform query"
+        :content (horizontal-panel :items [
+          (vertical-panel :items [query-field query-params-field])          
+          query-button])}])  
     (scrollable data-grid)]))
   (-> f pack! show!))
